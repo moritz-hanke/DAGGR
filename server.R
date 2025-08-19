@@ -22,6 +22,7 @@ server <- function(input, output, session) {
       to = integer(), 
       value = character(),  # Changed to character
       label = character(), 
+      dashes = logical(),   # NEW: Add dashes column for edge style
       stringsAsFactors = FALSE
     ),
     has_cycles = FALSE,
@@ -107,16 +108,6 @@ server <- function(input, output, session) {
     }
   }
   
-  # Download handler for expressions
-  # output$download_expressions <- downloadHandler(
-  #   filename = function() {
-  #     paste("network-expressions-", Sys.Date(), ".txt", sep="")
-  #   },
-  #   content = function(file) {
-  #     writeLines(generate_complete_expressions(), file)
-  #   }
-  # )
-  
   # Download handler for network data (now includes expressions)
   output$download_data <- downloadHandler(
     filename = function() {
@@ -161,6 +152,11 @@ server <- function(input, output, session) {
       required_edge_cols <- c("from", "to")
       if (!all(required_edge_cols %in% colnames(loaded_data$edges))) {
         stop(paste("Edges data must contain columns:", paste(required_edge_cols, collapse = ", ")))
+      }
+      
+      # NEW: Handle old data that doesn't have dashes column
+      if (!"dashes" %in% colnames(loaded_data$edges)) {
+        loaded_data$edges$dashes <- FALSE  # Default to solid edges
       }
       
       if (!"size" %in% colnames(loaded_data$nodes)) {
@@ -293,6 +289,9 @@ server <- function(input, output, session) {
       tmp_edge_value <- input$edge_value
     }
     
+    # NEW: Get edge style from input
+    edge_style <- as.logical(input$edge_style)
+    
     temp_edges <- rbind(
       rv$edges,
       data.frame(
@@ -300,6 +299,7 @@ server <- function(input, output, session) {
         to = to_id,
         value = tmp_edge_value,  # Now accepts any character input
         label = tmp_edge_value,  # Use the input directly as label
+        dashes = edge_style,     # NEW: Store edge style
         stringsAsFactors = FALSE
       )
     )
@@ -320,9 +320,10 @@ server <- function(input, output, session) {
     ]
     
     if (nrow(existing_edge) > 0) {
-      showNotification("Edge already exists. Updating its value.", type = "warning")
+      showNotification("Edge already exists. Updating its value and style.", type = "warning")
       rv$edges[rv$edges$from == from_id & rv$edges$to == to_id, "value"] <- ""
       rv$edges[rv$edges$from == from_id & rv$edges$to == to_id, "label"] <- tmp_edge_value
+      rv$edges[rv$edges$from == from_id & rv$edges$to == to_id, "dashes"] <- edge_style
     } else {
       rv$edges <- temp_edges
       showNotification("Edge added successfully", type = "message")
@@ -396,6 +397,7 @@ server <- function(input, output, session) {
       to = integer(), 
       value = character(), 
       label = character(), 
+      dashes = logical(),  # NEW: Include dashes column
       stringsAsFactors = FALSE
     )
     rv$has_cycles <- FALSE
@@ -408,6 +410,7 @@ server <- function(input, output, session) {
       to = integer(), 
       value = character(), 
       label = character(), 
+      dashes = logical(),  # NEW: Include dashes column
       stringsAsFactors = FALSE
     )
     rv$has_cycles <- FALSE
@@ -439,30 +442,34 @@ server <- function(input, output, session) {
         )
       }
       
-      # Prepare edges with conditional coloring
-      edges_with_colors <- rv$edges
-      edges_with_colors$value <- NULL
+      # Prepare edges with conditional coloring and style
+      edges_with_style <- rv$edges
+      edges_with_style$value <- NULL
       
       # Convert edge labels to numeric values for comparison
-      edge_values <- suppressWarnings(as.numeric(edges_with_colors$label))
+      edge_values <- suppressWarnings(as.numeric(edges_with_style$label))
       
       # Apply color based on numeric value (light red for negative, light blue for zero/positive)
-      edges_with_colors$color <- ifelse(
+      edges_with_style$color <- ifelse(
         !is.na(edge_values) & edge_values < 0,
         "#FF9999",  # Light red for negative values
         "#9AC0CD"   # Light blue for zero/positive values
       )
       
       # For non-numeric values, use default color
-      edges_with_colors$color[is.na(edge_values)] <- "#9AC0CD"
+      edges_with_style$color[is.na(edge_values)] <- "#9AC0CD"
       
-      visNetwork(nodes_with_titles, edges_with_colors) %>%
+      # NEW: Apply edge style (dashes)
+      edges_with_style$dashes <- edges_with_style$dashes
+      
+      visNetwork(nodes_with_titles, edges_with_style) %>%
         visNodes(shape = "circle") %>%
         visEdges(
           arrows = "to",
           width = 1,
           font = list(size = 15),
-          smooth = FALSE
+          smooth = FALSE,
+          dashes = ~dashes  # NEW: Apply dashes style
         ) %>%
         visOptions(manipulation = FALSE) %>%
         visInteraction(hover = TRUE) 
@@ -474,5 +481,3 @@ server <- function(input, output, session) {
     datatable(rv$nodes, options = list(pageLength = 5))
   })
 }
-
-#shinyApp(ui = ui, server = server)

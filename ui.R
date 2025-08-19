@@ -262,6 +262,10 @@ ui <- fluidPage(
                textInput("from_node", "From Node (name)", "", placeholder = "Source node"),
                textInput("to_node", "To Node (name)", "", placeholder = "Target node"),
                textInput("edge_value", "Edge Value (optional)", value = "", placeholder = "Any Type"),
+               # NEW: Edge style selection
+               selectInput("edge_style", "Edge Style", 
+                           choices = c("Solid" = FALSE, "Dashed" = TRUE), 
+                           selected = FALSE),
                actionButton("add_edge", "Add/Update Edge", class = "btn-primary-custom", icon = icon("link")),
                actionButton("delete_edge_btn", "Delete Edge", class = "btn-warning-custom", icon = icon("unlink")),
                htmlOutput("edge_error"),
