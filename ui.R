@@ -21,9 +21,9 @@ ui <- fluidPage(
         justify-content: space-between;
         align-items: center;
         padding: 15px 30px;
-        background: linear-gradient(135deg, #0F828C 0%, #1E3A8A 100%);
+        background: linear-gradient(135deg, #1a4b8c 0%, #2c3e50 100%);
         color: white;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         margin-bottom: 25px;
         border-radius: 0 0 8px 8px;
       }
@@ -33,125 +33,181 @@ ui <- fluidPage(
         flex-grow: 1;
         font-weight: 600;
         font-size: 1.8rem;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        letter-spacing: 0.5px;
       }
       
       .app-logo {
         height: 120px;
-        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4));
       }
       
       /* Panel styling */
       .panel-style {
         background-color: white;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        padding: 20px;
-        margin-bottom: 20px;
-        border-left: 4px solid #0F828C;
+        border-radius: 10px;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+        padding: 22px;
+        margin-bottom: 24px;
+        border-top: 1px solid #f1f5f9;
+        border-left: 4px solid #3a7ca5;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+      
+      .panel-style:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
       }
       
       .panel-header {
-        color: #0F828C;
+        color: #2c3e50;
         font-weight: 600;
         margin-top: 0;
-        margin-bottom: 15px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid #e2e8f0;
+        margin-bottom: 18px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #e8edf2;
+        font-size: 1.3rem;  /* Increased from 1.1rem */
+        display: flex;
+        align-items: center;
+        gap: 10px;  /* Increased from 8px */
+      }
+      
+      .panel-header i {
+        font-size: 1.4rem;  /* Added for icon sizing */
       }
       
       /* Button styling */
       .btn-primary-custom {
-        background-color: #0F828C;
+        background: linear-gradient(to bottom, #3a7ca5, #2a5c7a);
         border: none;
         color: white;
         width: 100%;
-        margin-bottom: 8px;
-        border-radius: 6px;
+        margin-bottom: 10px;
+        border-radius: 8px;
+        padding: 10px;
+        font-weight: 500;
         transition: all 0.3s;
+        box-shadow: 0 3px 6px rgba(58, 124, 165, 0.2);
       }
       
       .btn-primary-custom:hover {
-        background-color: #0c6871;
+        background: linear-gradient(to bottom, #4a8cb5, #3a6c8a);
         transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        box-shadow: 0 6px 10px rgba(58, 124, 165, 0.3);
       }
       
       .btn-warning-custom {
-        background-color: #F39F5A;
+        background: linear-gradient(to bottom, #e67e22, #d35400);
         border: none;
         color: white;
         width: 100%;
-        margin-bottom: 8px;
-        border-radius: 6px;
+        margin-bottom: 10px;
+        border-radius: 8px;
+        padding: 10px;
+        font-weight: 500;
         transition: all 0.3s;
+        box-shadow: 0 3px 6px rgba(230, 126, 34, 0.2);
       }
       
       .btn-warning-custom:hover {
-        background-color: #e08c47;
+        background: linear-gradient(to bottom, #f39c12, #e67e22);
         transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        box-shadow: 0 6px 10px rgba(230, 126, 34, 0.3);
       }
       
       .btn-danger-custom {
-        background-color: #872341;
+        background: linear-gradient(to bottom, #c0392b, #922b21);
         border: none;
         color: white;
         width: 100%;
-        margin-bottom: 8px;
-        border-radius: 6px;
+        margin-bottom: 10px;
+        border-radius: 8px;
+        padding: 10px;
+        font-weight: 500;
         transition: all 0.3s;
+        box-shadow: 0 3px 6px rgba(192, 57, 43, 0.2);
       }
       
       .btn-danger-custom:hover {
-        background-color: #6c1c34;
+        background: linear-gradient(to bottom, #e74c3c, #c0392b);
         transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        box-shadow: 0 6px 10px rgba(192, 57, 43, 0.3);
       }
       
       /* Input styling */
       .form-control {
-        border-radius: 6px;
-        border: 1px solid #cbd5e1;
-        padding: 8px 12px;
-        margin-bottom: 12px;
+        border-radius: 8px;
+        border: 1px solid #d9e2ec;
+        padding: 10px 14px;
+        margin-bottom: 14px;
+        transition: all 0.3s;
+        background-color: #f8fafc;
       }
       
       .form-control:focus {
-        border-color: #0F828C;
-        box-shadow: 0 0 0 3px rgba(15, 130, 140, 0.2);
+        border-color: #3a7ca5;
+        box-shadow: 0 0 0 3px rgba(58, 124, 165, 0.2);
+        background-color: white;
       }
       
       /* Network visualization container */
       #network {
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        border-radius: 10px;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
         background-color: white;
+        overflow: hidden;
       }
       
       /* Table styling */
       .dataTables_wrapper {
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+        padding: 18px;
         background-color: white;
       }
       
       /* Text output styling */
       .shiny-text-output {
         background-color: #f1f5f9;
-        border-radius: 6px;
-        padding: 15px;
-        border-left: 3px solid #0F828C;
+        border-radius: 8px;
+        padding: 18px;
+        border-left: 4px solid #3a7ca5;
         font-family: 'Courier New', monospace;
         max-height: 200px;
         overflow-y: auto;
+        line-height: 1.5;
       }
       
       /* HR styling */
       hr {
-        border-top: 1px solid #e2e8f0;
-        margin: 20px 0;
+        border-top: 1px solid #e8edf2;
+        margin: 22px 0;
+      }
+      
+      /* Custom select input styling */
+      .selectize-input {
+        border-radius: 8px;
+        border: 1px solid #d9e2ec;
+        padding: 10px 14px;
+        background-color: #f8fafc;
+      }
+      
+      .selectize-input.focus {
+        border-color: #3a7ca5;
+        box-shadow: 0 0 0 3px rgba(58, 124, 165, 0.2);
+      }
+      
+      /* File input button styling */
+      .btn-file {
+        background: linear-gradient(to bottom, #3a7ca5, #2a5c7a);
+        color: white;
+        border-radius: 8px;
+        padding: 8px 16px;
+        transition: all 0.3s;
+      }
+      
+      .btn-file:hover {
+        background: linear-gradient(to bottom, #4a8cb5, #3a6c8a);
       }
     "))
   ),
@@ -166,26 +222,19 @@ ui <- fluidPage(
     # Left column for node controls
     column(3,
            div(class = "panel-style",
-               h4(class = "panel-header", icon("database"), " Data Import/Export"),
-               fileInput("load_data", "Load Network Data", 
-                         accept = c(".rds", ".RData", ".rda"),
-                         buttonLabel = "Browse...",
-                         placeholder = "No file selected"),
-               downloadButton("download_data", "Download Data", class = "btn-primary-custom"),
-               hr(),
-               h4(class = "panel-header", icon("circle-nodes"), " Node Controls"),
+               h4(class = "panel-header", icon("circle-nodes", class = "fa-lg"), " Node Controls"),
                textInput("node_name", "Node Name", "", placeholder = "Enter node name"),
                selectInput("node_type", "Random Variable Type", 
-                           choices = c("normal", "binomial", "other")),
+                           choices = c("normal", "binomial")),
                conditionalPanel(
                  condition = "input.node_type == 'normal'",
-                 textInput("node_mean", "Mean", value = 0, placeholder = "Enter mean"),
-                 textInput("node_sd", "Standard Deviation", value = 1, placeholder = "Enter SD")
+                 textInput("node_mean", "Mean (optional)", value = "", placeholder = "Any Type"),
+                 textInput("node_sd", "SD (optional)", value = "", placeholder = "Any Type")
                ),
                conditionalPanel(
                  condition = "input.node_type == 'binomial'",
-                 textInput("node_p", "Probability (p)", value = 0.5, placeholder = "Enter probability"),
-                 textInput("node_size", "Size (n)", value = 1, placeholder = "Enter size")
+                 textInput("node_p", "Probability p (optional)", value = "", placeholder = "Any Type"),
+                 textInput("node_size", "Size n (optional)", value = "", placeholder = "Any Type")
                ),
                actionButton("add_node", "Add/Update Node", class = "btn-primary-custom", icon = icon("plus")),
                actionButton("delete_node_btn", "Delete Node", class = "btn-warning-custom", icon = icon("trash")),
@@ -197,11 +246,11 @@ ui <- fluidPage(
     column(6,
            visNetworkOutput("network", height = "500px"),
            div(class = "panel-style",
-               h4(class = "panel-header", icon("code"), " Stochastic Expressions"),
+               h4(class = "panel-header", icon("code", class = "fa-lg"), " Stochastic Expressions"),
                verbatimTextOutput("complete_expressions")
            ),
            div(class = "panel-style",
-               h4(class = "panel-header", icon("table"), " Node Attributes"),
+               h4(class = "panel-header", icon("table", class = "fa-lg"), " Node Attributes"),
                DTOutput("node_table")
            )
     ),
@@ -209,14 +258,21 @@ ui <- fluidPage(
     # Right column for edge controls
     column(3,
            div(class = "panel-style",
-               h4(class = "panel-header", icon("link"), " Edge Controls"),
+               h4(class = "panel-header", icon("link", class = "fa-lg"), " Edge Controls"),
                textInput("from_node", "From Node (name)", "", placeholder = "Source node"),
                textInput("to_node", "To Node (name)", "", placeholder = "Target node"),
-               textInput("edge_value", "Edge Value (any type)", value = "1", placeholder = "Edge value/weight"),
+               textInput("edge_value", "Edge Value (optional)", value = "", placeholder = "Any Type"),
                actionButton("add_edge", "Add/Update Edge", class = "btn-primary-custom", icon = icon("link")),
                actionButton("delete_edge_btn", "Delete Edge", class = "btn-warning-custom", icon = icon("unlink")),
                htmlOutput("edge_error"),
-               actionButton("clear_edges", "Clear All Edges", class = "btn-danger-custom", icon = icon("broom"))
+               actionButton("clear_edges", "Clear All Edges", class = "btn-danger-custom", icon = icon("broom")),
+               hr(),
+               h4(class = "panel-header", icon("database", class = "fa-lg"), " Data Import/Export"),
+               fileInput("load_data", "Load Network Data", 
+                         accept = c(".rds", ".RData", ".rda"),
+                         buttonLabel = "Browse...",
+                         placeholder = "No file selected"),
+               downloadButton("download_data", "Download Data", class = "btn-primary-custom")
            )
     )
   ) 

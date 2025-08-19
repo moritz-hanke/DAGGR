@@ -1,3 +1,8 @@
+library(shiny)
+library(visNetwork)
+library(shinyjs)
+library(DT)
+library(igraph)
 
 server <- function(input, output, session) {
   # Reactive values to store nodes and edges
@@ -65,24 +70,23 @@ server <- function(input, output, session) {
       stochastic_term <- switch(
         node_type,
         "normal" = {
-          mean_val <- ifelse(is.na(rv$nodes$mean[rv$nodes$id == node_id]), 
+          mean_val <- ifelse(is.na(rv$nodes$mean[rv$nodes$id == node_id]) | rv$nodes$mean[rv$nodes$id == node_id] == "", 
                              paste0("mean.", node_label), 
                              rv$nodes$mean[rv$nodes$id == node_id])
-          sd_val <- ifelse(is.na(rv$nodes$sd[rv$nodes$id == node_id]), 
+          sd_val <- ifelse(is.na(rv$nodes$sd[rv$nodes$id == node_id]) | rv$nodes$sd[rv$nodes$id == node_id] == "", 
                            paste0("sd.", node_label), 
                            rv$nodes$sd[rv$nodes$id == node_id])
           paste0("rnorm(n, mean=", mean_val, ", sd=", sd_val, ")")
         },
         "binomial" = {
-          p_val <- ifelse(is.na(rv$nodes$p[rv$nodes$id == node_id]), 
+          p_val <- ifelse(is.na(rv$nodes$p[rv$nodes$id == node_id]) || rv$nodes$p[rv$nodes$id == node_id] == "", 
                           paste0("p.", node_label), 
                           rv$nodes$p[rv$nodes$id == node_id])
-          size_val <- ifelse(is.na(rv$nodes$size[rv$nodes$id == node_id]), 
+          size_val <- ifelse(is.na(rv$nodes$size[rv$nodes$id == node_id]) || rv$nodes$size[rv$nodes$id == node_id] =="", 
                              paste0("size.", node_label), 
                              rv$nodes$size[rv$nodes$id == node_id])
           paste0("rbinom(n, size=", size_val, ", prob=", p_val, ")")
         },
-        "other" = "rnorm(n, mean=0, sd=1)",  # Default for other types
         "0"  # Fallback
       )
       
@@ -116,7 +120,7 @@ server <- function(input, output, session) {
   # Download handler for network data (now includes expressions)
   output$download_data <- downloadHandler(
     filename = function() {
-      paste("network-data-", Sys.Date(), ".rds", sep="")
+      paste("DAGGR-data-", Sys.Date(), ".rds", sep="")
     },
     content = function(file) {
       network_data <- list(
@@ -222,10 +226,10 @@ server <- function(input, output, session) {
     }
     
     updateTextInput(session, "node_name", value = "")
-    updateNumericInput(session, "node_mean", value = 0)
-    updateNumericInput(session, "node_sd", value = 1)
-    updateNumericInput(session, "node_p", value = 0.5)
-    updateNumericInput(session, "node_size", value = 1)
+    updateNumericInput(session, "node_mean", value = "")
+    updateNumericInput(session, "node_sd", value = "")
+    updateNumericInput(session, "node_p", value = "")
+    updateNumericInput(session, "node_size", value = "")
   })
   
   # Delete node based on node name input
@@ -294,7 +298,7 @@ server <- function(input, output, session) {
       data.frame(
         from = from_id,
         to = to_id,
-        value = 1,  # Now accepts any character input
+        value = tmp_edge_value,  # Now accepts any character input
         label = tmp_edge_value,  # Use the input directly as label
         stringsAsFactors = FALSE
       )
@@ -317,7 +321,7 @@ server <- function(input, output, session) {
     
     if (nrow(existing_edge) > 0) {
       showNotification("Edge already exists. Updating its value.", type = "warning")
-      rv$edges[rv$edges$from == from_id & rv$edges$to == to_id, "value"] <- 1
+      rv$edges[rv$edges$from == from_id & rv$edges$to == to_id, "value"] <- ""
       rv$edges[rv$edges$from == from_id & rv$edges$to == to_id, "label"] <- tmp_edge_value
     } else {
       rv$edges <- temp_edges
@@ -416,11 +420,9 @@ server <- function(input, output, session) {
       nodes_with_titles$title <- apply(nodes_with_titles, 1, function(node) {
         if (node["type"] == "normal") {
           paste0("Normal(μ=", node["mean"], ", σ=", node["sd"], ")")
-        } else if (node["type"] == "binomial") {
-          paste0("Binomial(n=", node["size"], ", p=", node["p"], ")")
         } else {
-          "Other"
-        }
+          paste0("Binomial(n=", node["size"], ", p=", node["p"], ")")
+        } 
       })
       
       if (rv$has_cycles) {
