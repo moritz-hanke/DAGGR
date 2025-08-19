@@ -214,7 +214,7 @@ ui <- fluidPage(
   
   # Header with title on left and logo on right
   div(class = "app-header",
-      h1(class = "app-title", "DAGGR: Directed Acyclic Graph Generator for Random numbers"),
+      h1(class = "app-title", "DAGGR: Directed Acyclic Graph Generator for Random variables"),
       tags$img(src = "DAGGR_logo.svg", class = "app-logo", alt = "App Logo")
   ),
   
