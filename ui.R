@@ -244,12 +244,13 @@ ui <- fluidPage(
     
     # Middle column for network visualization
     column(6,
-           visNetworkOutput("network", height = "500px"),
            div(class = "panel-style",
+               h4(class = "panel-header", "DAG"),
+               visNetworkOutput("network", height = "500px"),
+           
                h4(class = "panel-header", icon("code", class = "fa-lg"), " Stochastic Expressions"),
-               verbatimTextOutput("complete_expressions")
-           ),
-           div(class = "panel-style",
+               verbatimTextOutput("complete_expressions"),
+           
                h4(class = "panel-header", icon("table", class = "fa-lg"), " Node Attributes"),
                DTOutput("node_table")
            )
