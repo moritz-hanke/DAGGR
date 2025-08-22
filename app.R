@@ -3,8 +3,10 @@ library(visNetwork)
 library(shinyjs)
 library(DT)
 library(igraph)
+library(base64enc)
 
 ui <- fluidPage(
+  useShinyjs(),
   # Custom CSS for modern styling
   tags$head(
     tags$style(HTML("
@@ -209,6 +211,35 @@ ui <- fluidPage(
       .btn-file:hover {
         background: linear-gradient(to bottom, #4a8cb5, #3a6c8a);
       }
+      
+      /* Download link styling */
+      .download-ready {
+        background-color: #d4edda;
+        border: 1px solid #c3e6cb;
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 15px;
+        text-align: center;
+      }
+      
+      .download-link {
+        display: inline-block;
+        padding: 10px 20px;
+        background: linear-gradient(to bottom, #28a745, #20c997);
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: 500;
+        transition: all 0.3s;
+        margin-top: 10px;
+      }
+      
+      .download-link:hover {
+        background: linear-gradient(to bottom, #20c997, #28a745);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+        color: white;
+      }
     "))
   ),
   
@@ -277,17 +308,12 @@ ui <- fluidPage(
                          accept = c(".rds", ".RData", ".rda"),
                          buttonLabel = "Browse...",
                          placeholder = "No file selected"),
-               downloadButton("download_data", "Download Data", class = "btn-primary-custom")
+               actionButton("generate_download", "Generate Download Link", class = "btn-primary-custom", icon = icon("download")),
+               uiOutput("download_ui")
            )
     )
   ) 
 )
-
-library(shiny)
-library(visNetwork)
-library(shinyjs)
-library(DT)
-library(igraph)
 
 server <- function(input, output, session) {
   # Reactive values to store nodes and edges
@@ -313,7 +339,8 @@ server <- function(input, output, session) {
       stringsAsFactors = FALSE
     ),
     has_cycles = FALSE,
-    edge_error = NULL
+    edge_error = NULL,
+    download_uri = NULL
   )
   
   # Initialize layout coordinates
@@ -426,20 +453,48 @@ server <- function(input, output, session) {
     }
   }
   
-  # Download handler for network data (now includes expressions)
-  output$download_data <- downloadHandler(
-    filename = function() {
-      paste("DAGGR-data-", Sys.Date(), ".rds", sep="")
-    },
-    content = function(file) {
-      network_data <- list(
-        nodes = rv$nodes,
-        edges = rv$edges,
-        expressions = generate_complete_expressions(as_list = TRUE)
+  # Generate download link when button is clicked
+  observeEvent(input$generate_download, {
+    req(nrow(rv$nodes) > 0)  # Ensure there are nodes to download
+    
+    # Create network data
+    network_data <- list(
+      nodes = rv$nodes,
+      edges = rv$edges,
+      expressions = generate_complete_expressions(as_list = TRUE)
+    )
+    
+    # Create a temporary file
+    temp_file <- tempfile(fileext = ".rds")
+    saveRDS(network_data, temp_file)
+    
+    # Read the file as binary and convert to data URI
+    file_data <- readBin(temp_file, "raw", file.info(temp_file)$size)
+    file.remove(temp_file)
+    
+    # Create data URI
+    b64 <- base64enc::base64encode(file_data)
+    uri <- paste0("data:application/octet-stream;base64,", b64)
+    
+    rv$download_uri <- uri
+  })
+  
+  # Render download link UI
+  output$download_ui <- renderUI({
+    req(rv$download_uri)
+    
+    tags$div(
+      class = "download-ready",
+      h5("Download Ready:"),
+      tags$a(
+        href = rv$download_uri,
+        download = paste0("DAGGR-data-", Sys.Date(), ".rds"),
+        icon("download"),
+        "Click to download RDS file",
+        class = "download-link"
       )
-      saveRDS(network_data, file)
-    }
-  )
+    )
+  })
   
   # Load network data from file (updated to handle expressions)
   observeEvent(input$load_data, {
@@ -767,6 +822,7 @@ server <- function(input, output, session) {
       stringsAsFactors = FALSE
     )
     rv$has_cycles <- FALSE
+    rv$download_uri <- NULL
   })
   
   # Clear all edges
@@ -780,6 +836,7 @@ server <- function(input, output, session) {
       stringsAsFactors = FALSE
     )
     rv$has_cycles <- FALSE
+    rv$download_uri <- NULL
   })
   
   # Render the network visualization
