@@ -259,13 +259,13 @@ ui <- fluidPage(
                            choices = c("normal", "binomial")),
                conditionalPanel(
                  condition = "input.node_type == 'normal'",
-                 textInput("node_mean", "Mean (optional)", value = "", placeholder = "Any Type"),
-                 textInput("node_sd", "SD (optional)", value = "", placeholder = "Any Type")
+                 textInput("node_mean", "Mean", value = "", placeholder = "(optional)"),
+                 textInput("node_sd", "SD", value = "", placeholder = "(optional)")
                ),
                conditionalPanel(
                  condition = "input.node_type == 'binomial'",
-                 textInput("node_p", "Probability p (optional)", value = "", placeholder = "Any Type"),
-                 textInput("node_size", "Size n (optional)", value = "", placeholder = "Any Type")
+                 textInput("node_p", "Probability p", value = "", placeholder = "(optional)"),
+                 textInput("node_size", "Size n", value = "", placeholder = "(optional)")
                ),
                actionButton("add_node", "Add/Update Node", class = "btn-primary-custom", icon = icon("plus")),
                actionButton("delete_node_btn", "Delete Node", class = "btn-warning-custom", icon = icon("trash")),
@@ -293,7 +293,7 @@ ui <- fluidPage(
                h4(class = "panel-header", icon("link", class = "fa-lg"), " Edge Controls"),
                textInput("from_node", "From Node (name)", "", placeholder = "Source node"),
                textInput("to_node", "To Node (name)", "", placeholder = "Target node"),
-               textInput("edge_value", "Edge Value (optional)", value = "", placeholder = "Any Type"),
+               textInput("edge_value", "Edge Value", value = "", placeholder = "(optional)"),
                # NEW: Edge style selection
                selectInput("edge_style", "Edge Style", 
                            choices = c("Solid" = FALSE, "Dashed" = TRUE), 
@@ -308,6 +308,7 @@ ui <- fluidPage(
                          accept = c(".rds", ".RData", ".rda"),
                          buttonLabel = "Browse...",
                          placeholder = "No file selected"),
+               textInput("file_name", "File name for Download", value = "", placeholder = "(optional)"),
                actionButton("generate_download", "Generate Download Link", class = "btn-primary-custom", icon = icon("download")),
                uiOutput("download_ui")
            )
@@ -488,7 +489,7 @@ server <- function(input, output, session) {
       h5("Download Ready:"),
       tags$a(
         href = rv$download_uri,
-        download = paste0("DAGGR-data-", Sys.Date(), ".rds"),
+        download = ifelse(input$file_name=="", paste0("DAGGR-data-", Sys.Date(), ".rds"), paste0(input$file_name, ".rds")),
         icon("download"),
         "Click to download RDS file",
         class = "download-link"
