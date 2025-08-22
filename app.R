@@ -7,7 +7,7 @@ library(base64enc)
 
 ui <- fluidPage(
   useShinyjs(),
-  # Custom CSS for modern styling
+ 
   tags$head(
     tags$style(HTML("
       /* Global styles */
@@ -294,7 +294,6 @@ ui <- fluidPage(
                textInput("from_node", "From Node (name)", "", placeholder = "Source node"),
                textInput("to_node", "To Node (name)", "", placeholder = "Target node"),
                textInput("edge_value", "Edge Value", value = "", placeholder = "(optional)"),
-               # NEW: Edge style selection
                selectInput("edge_style", "Edge Style", 
                            choices = c("Solid" = FALSE, "Dashed" = TRUE), 
                            selected = FALSE),
@@ -333,10 +332,10 @@ server <- function(input, output, session) {
     ),
     edges = data.frame(
       from = integer(), 
-      to = integer(), 
-      value = character(),  # Changed to character
-      label = character(), 
-      dashes = logical(),   # NEW: Add dashes column for edge style
+      to = integer(),
+      value = character(),
+      label = character(),
+      dashes = logical(),
       stringsAsFactors = FALSE
     ),
     has_cycles = FALSE,
@@ -528,7 +527,7 @@ server <- function(input, output, session) {
         stop(paste("Edges data must contain columns:", paste(required_edge_cols, collapse = ", ")))
       }
       
-      # NEW: Handle old data that doesn't have dashes column
+      # Handle old data that doesn't have dashes column
       if (!"dashes" %in% colnames(loaded_data$edges)) {
         loaded_data$edges$dashes <- FALSE  # Default to solid edges
       }
@@ -711,7 +710,7 @@ server <- function(input, output, session) {
       tmp_edge_value <- input$edge_value
     }
     
-    # NEW: Get edge style from input
+    
     edge_style <- as.logical(input$edge_style)
     
     temp_edges <- rbind(
@@ -719,9 +718,9 @@ server <- function(input, output, session) {
       data.frame(
         from = from_id,
         to = to_id,
-        value = tmp_edge_value,  # Now accepts any character input
+        value = tmp_edge_value,  # Accept any character input
         label = tmp_edge_value,  # Use the input directly as label
-        dashes = edge_style,     # NEW: Store edge style
+        dashes = edge_style,     
         stringsAsFactors = FALSE
       )
     )
@@ -819,7 +818,7 @@ server <- function(input, output, session) {
       to = integer(), 
       value = character(), 
       label = character(), 
-      dashes = logical(),  # NEW: Include dashes column
+      dashes = logical(), 
       stringsAsFactors = FALSE
     )
     rv$has_cycles <- FALSE
@@ -833,7 +832,7 @@ server <- function(input, output, session) {
       to = integer(), 
       value = character(), 
       label = character(), 
-      dashes = logical(),  # NEW: Include dashes column
+      dashes = logical(),  
       stringsAsFactors = FALSE
     )
     rv$has_cycles <- FALSE
@@ -883,17 +882,17 @@ server <- function(input, output, session) {
       # For non-numeric values, use default color
       edges_with_style$color[is.na(edge_values)] <- "#9AC0CD"
       
-      # NEW: Apply edge style (dashes)
+      # Apply edge style (dashes)
       edges_with_style$dashes <- edges_with_style$dashes
       
       visNetwork(nodes_with_titles, edges_with_style) %>%
-        visNodes(shape = "circle") %>%
+        visNodes(shape = "circle", color = "lightgrey") %>%
         visEdges(
           arrows = "to",
-          width = 1,
+          width = 2,
           font = list(size = 15),
           smooth = FALSE,
-          dashes = ~dashes  # NEW: Apply dashes style
+          dashes = ~dashes  
         ) %>%
         visOptions(manipulation = FALSE) %>%
         visPhysics(enabled = FALSE) %>%
