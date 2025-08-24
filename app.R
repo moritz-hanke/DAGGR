@@ -7,7 +7,7 @@ library(base64enc)
 
 ui <- fluidPage(
   useShinyjs(),
- 
+  
   tags$head(
     tags$style(HTML("
       /* Global styles */
@@ -267,6 +267,12 @@ ui <- fluidPage(
                  textInput("node_p", "Probability p", value = "", placeholder = "(optional)"),
                  textInput("node_size", "Size n", value = "", placeholder = "(optional)")
                ),
+               fluidRow(
+                 column(width = 5,
+                        selectInput("node_shape", "Shape", 
+                                    choices = c("circle", "box"), 
+                                    selected = "circle")),
+                 column(width = 7,textInput("node_color", "Color", value = "", placeholder = "lightgray (default)"))),
                actionButton("add_node", "Add/Update Node", class = "btn-primary-custom", icon = icon("plus")),
                actionButton("delete_node_btn", "Delete Node", class = "btn-warning-custom", icon = icon("trash")),
                actionButton("clear_nodes", "Clear All Nodes", class = "btn-danger-custom", icon = icon("broom"))
@@ -326,6 +332,8 @@ server <- function(input, output, session) {
       sd = numeric(),
       p = numeric(),
       size = numeric(),
+      shape = character(),
+      color = character(),
       x = numeric(),
       y = numeric(),
       stringsAsFactors = FALSE
@@ -340,8 +348,20 @@ server <- function(input, output, session) {
     ),
     has_cycles = FALSE,
     edge_error = NULL,
-    download_uri = NULL
+    download_uri = NULL,
+    layout_coords = list()
   )
+  
+  # Function to validate color
+  validate_color <- function(color) {
+    # Check if color is valid by trying to convert to RGB
+    tryCatch({
+      col2rgb(color)
+      return(color)
+    }, error = function(e) {
+      return("lightgray")
+    })
+  }
   
   # Initialize layout coordinates
   observe({
@@ -405,7 +425,7 @@ server <- function(input, output, session) {
         sources <- sapply(incoming_edges$from, function(src_id) {
           src_label <- rv$nodes$label[rv$nodes$id == src_id]
           weight <- incoming_edges$label[incoming_edges$from == src_id]
-          paste0(weight, "*", src_label)  # Added parentheses around weight
+          paste0(weight, "*", src_label)
         })
         linear_part <- paste(sources, collapse = " + ")
       } else {
@@ -496,7 +516,7 @@ server <- function(input, output, session) {
     )
   })
   
-  # Load network data from file (updated to handle expressions)
+  # Load network data from file (updated to handle expressions and positions)
   observeEvent(input$load_data, {
     req(input$load_data)
     
@@ -536,8 +556,38 @@ server <- function(input, output, session) {
         loaded_data$nodes$size <- 1
       }
       
-      rv$nodes <- loaded_data$nodes
-      rv$edges <- loaded_data$edges
+      # Handle shape and color for backward compatibility
+      if (!"shape" %in% colnames(loaded_data$nodes)) {
+        loaded_data$nodes$shape <- "circle"  # Default shape
+      }
+      
+      if (!"color" %in% colnames(loaded_data$nodes)) {
+        loaded_data$nodes$color <- "lightgray"  # Default color
+      } else {
+        # Validate colors in loaded data
+        loaded_data$nodes$color <- sapply(loaded_data$nodes$color, validate_color)
+      }
+      
+      # Ensure x and y coordinates are present and restore them
+      if ("x" %in% colnames(loaded_data$nodes) && "y" %in% colnames(loaded_data$nodes)) {
+        # Use saved positions if available
+        rv$nodes <- loaded_data$nodes
+        rv$edges <- loaded_data$edges
+        
+        # Restore layout coordinates from loaded data
+        rv$layout_coords <- setNames(
+          lapply(1:nrow(rv$nodes), function(i) {
+            list(x = rv$nodes$x[i], y = rv$nodes$y[i])
+          }),
+          as.character(rv$nodes$id)
+        )
+      } else {
+        # If no positions saved, use default layout
+        rv$nodes <- loaded_data$nodes
+        rv$edges <- loaded_data$edges
+        rv$layout_coords <- list()  # Will be calculated automatically
+      }
+      
       rv$has_cycles <- check_for_cycles()
       
       showNotification("Network data loaded successfully", type = "message")
@@ -591,12 +641,18 @@ server <- function(input, output, session) {
       new_y <- 0
     }
     
+    # Validate and set color
+    node_color <- ifelse(input$node_color == "", "lightgray", input$node_color)
+    node_color <- validate_color(node_color)
+    
     if (length(existing_node_index) > 0) {
       rv$nodes$type[existing_node_index] <- input$node_type
       rv$nodes$mean[existing_node_index] <- ifelse(input$node_type == "normal", input$node_mean, NA)
       rv$nodes$sd[existing_node_index] <- ifelse(input$node_type == "normal", input$node_sd, NA)
       rv$nodes$p[existing_node_index] <- ifelse(input$node_type == "binomial", input$node_p, NA)
       rv$nodes$size[existing_node_index] <- ifelse(input$node_type == "binomial", input$node_size, NA)
+      rv$nodes$shape[existing_node_index] <- input$node_shape
+      rv$nodes$color[existing_node_index] <- node_color
       showNotification(paste("Node", input$node_name, "updated"), type = "message")
     } else {
       new_id <- ifelse(nrow(rv$nodes) == 0, 1, max(rv$nodes$id) + 1)
@@ -609,6 +665,8 @@ server <- function(input, output, session) {
         sd = ifelse(input$node_type == "normal", input$node_sd, NA),
         p = ifelse(input$node_type == "binomial", input$node_p, NA),
         size = ifelse(input$node_type == "binomial", input$node_size, NA),
+        shape = input$node_shape,
+        color = node_color,
         x = new_x,
         y = new_y,
         stringsAsFactors = FALSE
@@ -620,10 +678,11 @@ server <- function(input, output, session) {
     }
     
     updateTextInput(session, "node_name", value = "")
-    updateNumericInput(session, "node_mean", value = "")
-    updateNumericInput(session, "node_sd", value = "")
-    updateNumericInput(session, "node_p", value = "")
-    updateNumericInput(session, "node_size", value = "")
+    updateTextInput(session, "node_mean", value = "")
+    updateTextInput(session, "node_sd", value = "")
+    updateTextInput(session, "node_p", value = "")
+    updateTextInput(session, "node_size", value = "")
+    updateTextInput(session, "node_color", value = "")
   })
   
   # Handle node dragging - update positions in real-time
@@ -811,6 +870,10 @@ server <- function(input, output, session) {
       sd = character(),
       p = character(),
       size = character(),
+      shape = character(),
+      color = character(),
+      x = numeric(),
+      y = numeric(),
       stringsAsFactors = FALSE
     )
     rv$edges <- data.frame(
@@ -823,6 +886,7 @@ server <- function(input, output, session) {
     )
     rv$has_cycles <- FALSE
     rv$download_uri <- NULL
+    rv$layout_coords <- list()
   })
   
   # Clear all edges
@@ -839,7 +903,7 @@ server <- function(input, output, session) {
     rv$download_uri <- NULL
   })
   
-  # Render the network visualization
+  # Render the network visualization with saved positions
   output$network <- renderVisNetwork({
     if (nrow(rv$nodes) > 0) {
       nodes_with_titles <- rv$nodes
@@ -861,7 +925,7 @@ server <- function(input, output, session) {
         nodes_with_titles$color <- ifelse(
           nodes_with_titles$id %in% nodes_in_cycles,
           "#FF9999",
-          "#9AC0CD"
+          nodes_with_titles$color  # Use the stored color
         )
       }
       
@@ -886,7 +950,8 @@ server <- function(input, output, session) {
       edges_with_style$dashes <- edges_with_style$dashes
       
       visNetwork(nodes_with_titles, edges_with_style) %>%
-        visNodes(shape = "circle", color = "lightgrey") %>%
+        visNodes( 
+          color = ~color) %>%  
         visEdges(
           arrows = "to",
           width = 2,
@@ -896,7 +961,7 @@ server <- function(input, output, session) {
         ) %>%
         visOptions(manipulation = FALSE) %>%
         visPhysics(enabled = FALSE) %>%
-        visIgraphLayout(type = "full") %>% 
+        visIgraphLayout(type = "full", layout = "layout_nicely") %>% 
         visInteraction(
           hover = TRUE,
           dragNodes = TRUE,
@@ -914,12 +979,16 @@ server <- function(input, output, session) {
     }
   })
   
-  # Display node attributes in a table
+  # Display node attributes in a table (excluding x, y, shape, and color positions)
   output$node_table <- renderDT({
-    datatable(rv$nodes, options = list(pageLength = 5))
+    # Create a copy of nodes without x, y, shape, and color columns
+    display_nodes <- rv$nodes
+    if (nrow(display_nodes) > 0) {
+      display_nodes <- display_nodes[, !(names(display_nodes) %in% c("x", "y", "shape", "color"))]
+    }
+    datatable(display_nodes, options = list(pageLength = 5))
   })
 }
-
 
 # Custom JavaScript to handle position tracking
 jscode <- '
