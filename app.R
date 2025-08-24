@@ -267,6 +267,7 @@ ui <- fluidPage(
                  textInput("node_p", "Probability p", value = "", placeholder = "(optional)"),
                  textInput("node_size", "Size n", value = "", placeholder = "(optional)")
                ),
+               textInput("node_intercept", "Intercept", "", placeholder = "(optional)"),
                fluidRow(
                  column(width = 5,
                         selectInput("node_shape", "Shape", 
@@ -332,6 +333,7 @@ server <- function(input, output, session) {
       sd = numeric(),
       p = numeric(),
       size = numeric(),
+      intercept = character(),
       shape = character(),
       color = character(),
       x = numeric(),
@@ -456,12 +458,22 @@ server <- function(input, output, session) {
         "0"  # Fallback
       )
       
+      
       # Combine the parts with <- assignment
-      if (!is.null(linear_part)) {
-        expr <- paste0(node_label, " <- ", linear_part, " + ", stochastic_term)
-      } else {
-        expr <- paste0(node_label, " <- ", stochastic_term)
+      if(rv$nodes$intercept[rv$nodes$id == node_id] == ""){
+        if (!is.null(linear_part)) {
+          expr <- paste0(node_label, " <- ", linear_part, " + ", stochastic_term)
+        } else {
+          expr <- paste0(node_label, " <- ", stochastic_term)
+        }
+      }else{
+        if (!is.null(linear_part)) {
+          expr <- paste0(node_label, " <- ", rv$nodes$intercept[rv$nodes$id == node_id], " + ", linear_part, " + ", stochastic_term)
+        } else {
+          expr <- paste0(node_label, " <- ", rv$nodes$intercept[rv$nodes$id == node_id], " + ", stochastic_term)
+        }
       }
+      
       
       expr
     })
@@ -651,6 +663,7 @@ server <- function(input, output, session) {
       rv$nodes$sd[existing_node_index] <- ifelse(input$node_type == "normal", input$node_sd, NA)
       rv$nodes$p[existing_node_index] <- ifelse(input$node_type == "binomial", input$node_p, NA)
       rv$nodes$size[existing_node_index] <- ifelse(input$node_type == "binomial", input$node_size, NA)
+      rv$nodes$intercept[existing_node_index] <- input$node_intercept
       rv$nodes$shape[existing_node_index] <- input$node_shape
       rv$nodes$color[existing_node_index] <- node_color
       showNotification(paste("Node", input$node_name, "updated"), type = "message")
@@ -665,6 +678,7 @@ server <- function(input, output, session) {
         sd = ifelse(input$node_type == "normal", input$node_sd, NA),
         p = ifelse(input$node_type == "binomial", input$node_p, NA),
         size = ifelse(input$node_type == "binomial", input$node_size, NA),
+        intercept = input$node_intercept,
         shape = input$node_shape,
         color = node_color,
         x = new_x,
@@ -681,6 +695,7 @@ server <- function(input, output, session) {
     updateTextInput(session, "node_mean", value = "")
     updateTextInput(session, "node_sd", value = "")
     updateTextInput(session, "node_p", value = "")
+    updateTextInput(session, "node_intercept", value = "")
     updateTextInput(session, "node_size", value = "")
     updateTextInput(session, "node_color", value = "")
   })
