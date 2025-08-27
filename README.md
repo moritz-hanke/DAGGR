@@ -24,7 +24,7 @@ A live version of the app is hosted on ShinyApps.io:
 **[→ Launch the DAGGR Web App
 ←](https://moritz-hanke.github.io/DAGGR/)**
 
-\### Option 2: Run Locally from R/RStudio
+### Option 2: Run Locally from R/RStudio
 
 To run DAGGR on your own machine, ensure you have R installed and then
 run the following code in your console:
@@ -68,6 +68,12 @@ shiny::runApp()
   (solid/dashed), and coefficients.
 - **Import & Export**: Save your network and and stoachstic espressions
   as an .rds file to share or load it later for further editing.
+
+## Short example
+
+For a simple DAG that shows different features of the app start the app
+(webbased or locally) and load the file
+`./examples/Example_DAGGR_Data.rds`.
 
 ## Usage Guide
 
