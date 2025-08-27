@@ -69,11 +69,18 @@ shiny::runApp()
 - **Import & Export**: Save your network and and stoachstic espressions
   as an .rds file to share or load it later for further editing.
 
-## Short example
+## Example DAG
 
 For a simple DAG that shows different features of the app start the app
 (webbased or locally) and load the file
 `./examples/Example_DAGGR_Data.rds`.
+
+<figure>
+<img src="./www/DAGGR_App.png"
+alt="A Screenshot of an example DAG in the DAGGR shiny app" />
+<figcaption aria-hidden="true">A Screenshot of an example DAG in the
+DAGGR shiny app</figcaption>
+</figure>
 
 ## Usage Guide
 
