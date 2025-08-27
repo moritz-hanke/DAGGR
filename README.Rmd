@@ -106,12 +106,14 @@ The middle panel provides two key outputs:
 * **Stochastic Expressions**: The automatically generated R code that defines how each variable is computed. This code is topologically sorted, meaning a variable's dependencies are defined before it is used.
 * **Node Attributes**: A table summarizing all nodes and their properties.
 
-Example Output Code:
+Example Output Code for the stochastic experession (based on the example DAG `./examples/Example_DAGGR_Data.rds`):
 
 ``` r
-X <- rnorm(n, mean=mean.X, sd=sd.X)
-Z <- 1 + 0.5*X + rnorm(n, mean=mean.Z, sd=sd.Z)
-Y <- 2 + -1.2*X + 0.8*Z + rbinom(n, size=size.Y, prob=p.Y)
+U1 <- 1 + rnorm(n, mean=0, sd=3)
+Z1 <- intercept.Z1 + coef.U1.Z1*U1 + rnorm(n, mean=2, sd=4)
+X1 <- -0.3*Z1 + rnorm(n, mean=0, sd=2)
+X2 <- β*Z1 + rbinom(n, size=1, prob=0.3)
+Y <- 3 + 1*X1 + -2*X2 + 2*U1 + rnorm(n, mean=mean.Y, sd=sd.Y)
 ```
 
 
