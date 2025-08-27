@@ -409,6 +409,43 @@ server <- function(input, output, session) {
     !is_dag(g)
   }
   
+  # Function to extract dependencies from an expression
+  get_dependencies <- function(expr) {
+    # Parse the expression and find all variables used
+    parsed <- parse(text = expr)
+    all_vars <- all.vars(parsed)
+    # Remove the assigned variable (left side of <-)
+    assigned_var <- all.vars(parse(text = sub("<-.*", "", expr)))
+    setdiff(all_vars, assigned_var)
+  }
+  
+  sort_expressions <- function(exprs) {
+    # Extract variable names and dependencies
+    vars <- sapply(exprs, function(x) all.vars(parse(text = sub("<-.*", "", x))))
+    deps <- lapply(exprs, get_dependencies)
+    
+    # Create edge list for graph
+    edges <- list()
+    for (i in seq_along(exprs)) {
+      for (dep in deps[[i]]) {
+        edges <- c(edges, list(c(dep, vars[i])))
+      }
+    }
+    
+    if (length(edges) == 0) {
+      return(exprs) # No dependencies
+    }
+    
+    # Create graph and perform topological sort
+    edge_matrix <- do.call(rbind, edges)
+    g <- graph_from_edgelist(edge_matrix)
+    sorted_vars <- names(topo_sort(g))
+    
+    # Reorder expressions
+    expr_order <- match(sorted_vars, vars)
+    exprs[expr_order]
+  }
+  
   # Function to generate complete expressions for all nodes
   generate_complete_expressions <- function(as_list = FALSE) {
     if (nrow(rv$nodes) == 0) {
@@ -474,14 +511,13 @@ server <- function(input, output, session) {
         }
       }
       
-      
       expr
     })
     
     if (as_list) {
-      return(unlist(expressions))
+      return(c(na.omit(sort_expressions(unlist(expressions)))))
     } else {
-      return(paste(unlist(expressions), collapse = "\n"))
+      return(paste(c(na.omit(sort_expressions(unlist(expressions)))), collapse = "\n"))
     }
   }
   
