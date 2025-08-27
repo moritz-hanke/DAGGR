@@ -203,7 +203,7 @@ print(dag_expressions)
     ## [5] "Y <- 3 + 1*X1 + -2*X2 + 2*U1 + rnorm(n, mean=mean.Y, sd=sd.Y)"
 
 ``` r
-# plot in igraph
+# plot the generared DAG as an igraph object
 plot(dag_data$igraphNetwork, layout = cbind(dag_data$nodes$x, dag_data$nodes$y))
 ```
 

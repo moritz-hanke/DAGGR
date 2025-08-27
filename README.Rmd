@@ -137,9 +137,8 @@ dag_expressions <- dag_data$expressions
 # print expressions
 print(dag_expressions)
 
-# plot in igraph
+# plot the generared DAG as an igraph object
 plot(dag_data$igraphNetwork, layout = cbind(dag_data$nodes$x, dag_data$nodes$y))
-
 
 # 100 observations for the random variables
 n <- 100
