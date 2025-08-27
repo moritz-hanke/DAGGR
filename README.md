@@ -170,6 +170,22 @@ Using the saved `.rds`obejct we can use this to genrate random values
 based on the expressions.
 
 ``` r
+library(igraph)
+```
+
+    ## 
+    ## Attaching package: 'igraph'
+
+    ## The following objects are masked from 'package:stats':
+    ## 
+    ##     decompose, spectrum
+
+    ## The following object is masked from 'package:base':
+    ## 
+    ##     union
+
+``` r
+library(visNetwork)
 # load saved rds
 dag_data <- readRDS("examples/Example_DAGGR_Data.rds")
 
@@ -185,6 +201,13 @@ print(dag_expressions)
     ## [3] "X1 <- -0.3*Z1 + rnorm(n, mean=0, sd=2)"                       
     ## [4] "X2 <- β*Z1 + rbinom(n, size=1, prob=0.3)"                     
     ## [5] "Y <- 3 + 1*X1 + -2*X2 + 2*U1 + rnorm(n, mean=mean.Y, sd=sd.Y)"
+
+``` r
+# plot in igraph
+plot(dag_data$igraphNetwork, layout = cbind(dag_data$nodes$x, dag_data$nodes$y))
+```
+
+![](README_files/figure-gfm/unnamed-chunk-1-1.png)<!-- -->
 
 ``` r
 # 100 observations for the random variables

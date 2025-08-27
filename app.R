@@ -529,7 +529,9 @@ server <- function(input, output, session) {
     network_data <- list(
       nodes = rv$nodes,
       edges = rv$edges,
-      expressions = generate_complete_expressions(as_list = TRUE)
+      expressions = generate_complete_expressions(as_list = TRUE),
+      #visNetwork = get_visNetwork_object(), at the moment we do not safe the visnetwork 
+      igraphNetwork = get_igraph_object()
     )
     
     # Create a temporary file
@@ -1039,6 +1041,94 @@ server <- function(input, output, session) {
     }
     datatable(display_nodes, options = list(pageLength = 5))
   })
+  
+  
+  get_visNetwork_object <- reactive({
+    req(nrow(rv$nodes) > 0)
+    
+    nodes_with_titles <- rv$nodes
+    nodes_with_titles$title <- apply(nodes_with_titles, 1, function(node) {
+      if (node["type"] == "normal") {
+        paste0("Normal(μ=", node["mean"], ", σ=", node["sd"], ")")
+      } else {
+        paste0("Binomial(n=", node["size"], ", p=", node["p"], ")")
+      } 
+    })
+    
+    # Prepare edges with conditional coloring and style
+    edges_with_style <- rv$edges
+    edges_with_style$value <- NULL
+    
+    # Convert edge labels to numeric values for comparison
+    edge_values <- suppressWarnings(as.numeric(edges_with_style$label))
+    
+    # Apply color based on numeric value
+    edges_with_style$color <- ifelse(
+      !is.na(edge_values) & edge_values < 0,
+      "#FF9999",  # Light red for negative values
+      "#9AC0CD"   # Light blue for zero/positive values
+    )
+    
+    # For non-numeric values, use default color
+    edges_with_style$color[is.na(edge_values)] <- "#9AC0CD"
+    
+    # Create the visNetwork object
+    vis_obj <- visNetwork(nodes_with_titles, edges_with_style) %>%
+      visNodes(color = ~color) %>%  
+      visEdges(
+        arrows = "to",
+        width = 2,
+        font = list(size = 15),
+        smooth = FALSE,
+        dashes = ~dashes  
+      ) %>%
+      visOptions(manipulation = FALSE) %>%
+      visPhysics(enabled = FALSE) %>%
+      visInteraction(
+        hover = TRUE,
+        dragNodes = TRUE,
+        dragView = TRUE,
+        zoomView = TRUE
+      )
+    
+    return(vis_obj)
+  })
+  
+  get_igraph_object <- reactive({
+    req(nrow(rv$nodes) > 0)
+    
+    # Create igraph from edges and nodes
+    g <- graph_from_data_frame(
+      d = rv$edges[, c("from", "to")],
+      vertices = rv$nodes[, c("id", "label")],
+      directed = TRUE
+    )
+    
+    # Add node attributes
+    # V(g)$type <- rv$nodes$type
+    # V(g)$mean <- rv$nodes$mean
+    # V(g)$sd <- rv$nodes$sd
+    # V(g)$p <- rv$nodes$p
+    # V(g)$size <- rv$nodes$size
+    # V(g)$intercept <- rv$nodes$intercept
+    V(g)$shape <- ifelse(rv$nodes$shape == "box", "rectangle", rv$nodes$shape)
+    V(g)$color <- rv$nodes$color
+    
+    # Add edge attributes
+    if(nrow(rv$edges) > 0) {
+      E(g)$value <- rv$edges$value
+      E(g)$label <- rv$edges$label
+      E(g)$dashes <- rv$edges$dashes
+      E(g)$color <- ifelse(rv$edges$label < 0, "#FF9999",  "#9AC0CD" )
+    }
+    
+    return(g)
+  })
+  
+  
+  
+  
+  
 }
 
 # Custom JavaScript to handle position tracking

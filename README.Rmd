@@ -126,6 +126,8 @@ Y <- 3 + 1*X1 + -2*X2 + 2*U1 + rnorm(n, mean=mean.Y, sd=sd.Y)
 Using the saved `.rds`obejct we can use this to genrate random values based on the expressions.
 
 ```{r echo=TRUE}
+library(igraph)
+library(visNetwork)
 # load saved rds
 dag_data <- readRDS("examples/Example_DAGGR_Data.rds")
 
@@ -134,6 +136,10 @@ dag_expressions <- dag_data$expressions
 
 # print expressions
 print(dag_expressions)
+
+# plot in igraph
+plot(dag_data$igraphNetwork, layout = cbind(dag_data$nodes$x, dag_data$nodes$y))
+
 
 # 100 observations for the random variables
 n <- 100
