@@ -164,6 +164,62 @@ Y <- 3 + 1*X1 + -2*X2 + 2*U1 + rnorm(n, mean=mean.Y, sd=sd.Y)
 - To **Load**: Use the “Load Network Data” button to upload a previously
   saved .rds file and continue working.
 
+### 8. Generating random values based
+
+Using the saved `.rds`obejct we can use this to genrate random values
+based on the expressions.
+
+``` r
+# load saved rds
+dag_data <- readRDS("examples/Example_DAGGR_Data.rds")
+
+# extract expressions
+dag_expressions <- dag_data$expressions
+
+# print expressions
+dag_expressions
+
+# 100 observations for the random variables
+n <- 100
+
+# intercept.Z1, coef.U1.Z1, β, mean.Y and sd.Y are placeholders since we did not assign
+# values in the shiny app. We need to define them now:
+intercept.Z1 <- 1
+coef.U1.Z1 <- 4.3
+β <- -0.7
+mean.Y <- 0
+sd.Y <- 4
+
+# define a simple function to genrate random numbers:
+rand_vars_from_exprs <- function(exprs, seed=NULL){
+  out <- list()
+  if(!is.null(seed)){
+    set.seed(seed)
+  }
+  for (i in seq_along(dag_data$expressions)) {
+    out[[i]] <- eval(parse(text = dag_data$expressions[i]))
+  }
+  rm(i)
+  
+  var_names <- as.character(
+    sapply(exprs, function(i){
+      all.vars(parse(text = sub("<-.*", "", i)))
+    })
+  )
+  
+  names(out) <- var_names
+  out
+}
+
+# generate random numbers
+rand_numbers <- rand_vars_from_exprs(dag_expressions)
+
+# bind columns
+rand_numbers <- do.call(cbind, rand_numbers)
+
+head(rand_numbers)
+```
+
 ## Technical Details
 
 Built With
