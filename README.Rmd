@@ -12,6 +12,14 @@ output: github_document
 
 **DAGGR** is an interactive R Shiny application designed for visually building and defining **Directed Acyclic Graphs (DAGs)** composed of statistical random variables. It provides an intuitive point-and-click interface to construct complex causal or statistical models, and then automatically generates the corresponding R code to simulate data from your defined model.
 
+
+## Example DAG in DAGGR
+
+For a simple DAG that shows different features of the app start the app (webbased or locally) and
+load the file `./examples/Example_DAGGR_Data.rds`. 
+
+![A Screenshot of an example DAG in the DAGGR shiny app](./www/DAGGR_App.png)
+
 ## Live Demo / Installation
 
 You can run DAGGR directly in your browser or locally.
@@ -59,13 +67,6 @@ shiny::runApp()
 * **Customizable**: Control node colors, shapes, edge styles (solid/dashed), and coefficients.
 * **Import & Export**: Save your network and and stoachstic espressions as an .rds file to share or load it later for further editing.
 
-
-## Example DAG in DAGGR
-
-For a simple DAG that shows different features of the app start the app (webbased or locally) and
-load the file `./examples/Example_DAGGR_Data.rds`. 
-
-![A Screenshot of an example DAG in the DAGGR shiny app](./www/DAGGR_App.png)
 
 ## Usage Guide
 
