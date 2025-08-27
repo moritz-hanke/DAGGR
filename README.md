@@ -177,8 +177,16 @@ dag_data <- readRDS("examples/Example_DAGGR_Data.rds")
 dag_expressions <- dag_data$expressions
 
 # print expressions
-dag_expressions
+print(dag_expressions)
+```
 
+    ## [1] "U1 <- 1 + rnorm(n, mean=0, sd=3)"                             
+    ## [2] "Z1 <- intercept.Z1 + coef.U1.Z1*U1 + rnorm(n, mean=2, sd=4)"  
+    ## [3] "X1 <- -0.3*Z1 + rnorm(n, mean=0, sd=2)"                       
+    ## [4] "X2 <- β*Z1 + rbinom(n, size=1, prob=0.3)"                     
+    ## [5] "Y <- 3 + 1*X1 + -2*X2 + 2*U1 + rnorm(n, mean=mean.Y, sd=sd.Y)"
+
+``` r
 # 100 observations for the random variables
 n <- 100
 
@@ -212,13 +220,21 @@ rand_vars_from_exprs <- function(exprs, seed=NULL){
 }
 
 # generate random numbers
-rand_numbers <- rand_vars_from_exprs(dag_expressions)
+rand_numbers <- rand_vars_from_exprs(dag_expressions, seed=2025)
 
 # bind columns
 rand_numbers <- do.call(cbind, rand_numbers)
 
-head(rand_numbers)
+print(head(rand_numbers))
 ```
+
+    ##            U1        Z1        X1         X2         Y
+    ## [1,] 2.862270 18.069466 -5.813016 -12.648626 30.505643
+    ## [2,] 1.106924  6.740851 -7.720741  -3.718596  5.028175
+    ## [3,] 3.319463 21.443124 -7.842939 -15.010187 21.602988
+    ## [4,] 4.817467 24.663154 -7.578685 -17.264208 43.210219
+    ## [5,] 2.112926  6.776634 -2.381000  -4.743644 13.929248
+    ## [6,] 0.511437  4.893639 -3.498906  -3.425547  2.554050
 
 ## Technical Details
 

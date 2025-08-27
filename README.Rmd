@@ -124,7 +124,7 @@ Y <- 3 + 1*X1 + -2*X2 + 2*U1 + rnorm(n, mean=mean.Y, sd=sd.Y)
 ### 8. Generating random values based
 Using the saved `.rds`obejct we can use this to genrate random values based on the expressions.
 
-```r
+```{r echo=TRUE}
 # load saved rds
 dag_data <- readRDS("examples/Example_DAGGR_Data.rds")
 
@@ -132,7 +132,7 @@ dag_data <- readRDS("examples/Example_DAGGR_Data.rds")
 dag_expressions <- dag_data$expressions
 
 # print expressions
-dag_expressions
+print(dag_expressions)
 
 # 100 observations for the random variables
 n <- 100
@@ -167,12 +167,12 @@ rand_vars_from_exprs <- function(exprs, seed=NULL){
 }
 
 # generate random numbers
-rand_numbers <- rand_vars_from_exprs(dag_expressions)
+rand_numbers <- rand_vars_from_exprs(dag_expressions, seed=2025)
 
 # bind columns
 rand_numbers <- do.call(cbind, rand_numbers)
 
-head(rand_numbers)
+print(head(rand_numbers))
 
 ```
 
