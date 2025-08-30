@@ -52,8 +52,7 @@ if(!require("igraph")) install.packages("igraph")
 if(!require("base64enc")) install.packages("base64enc")
 
 # Run the app directly from GitHub using shiny::runGitHub
-shiny::runGitHub("your_github_username/your_repo_name", subdir = "/")
-# Example: shiny::runGitHub("johndoe/DAGGR-App")
+shiny::runGitHub("moritz-hanke/DAGGR", subdir = "/")
 ```
 
 Alternatively, clone the repository and run the app.R file:
@@ -141,6 +140,8 @@ The middle panel provides two key outputs:
   defines how each variable is computed. This code is topologically
   sorted, meaning a variable’s dependencies are defined before it is
   used.
+- \*igraph object\*\*: the visNetwork is transformed to an igraph object
+  that can be further processed.
 - **Node Attributes**: A table summarizing all nodes and their
   properties.
 
@@ -166,8 +167,8 @@ Y <- 3 + 1*X1 + -2*X2 + 2*U1 + rnorm(n, mean=mean.Y, sd=sd.Y)
 
 ### 8. Generating random values based
 
-Using the saved `.rds`obejct we can use this to genrate random values
-based on the expressions.
+Using the saved `.rds`obejct we can generate random values based on the
+saved expressions.
 
 ``` r
 library(igraph)
@@ -204,7 +205,13 @@ print(dag_expressions)
 
 ``` r
 # plot the generared DAG as an igraph object
-plot(dag_data$igraphNetwork, layout = cbind(dag_data$nodes$x, dag_data$nodes$y))
+plot(dag_data$igraphNetwork, 
+     layout = cbind(dag_data$nodes$x, dag_data$nodes$y),
+     vertex.label.color = "black",
+     vertex.label.cex = 1,
+     edge.arrow.size = 0.75,
+     edge.arrow.width = 1,
+     edge.width = 2)
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-1-1.png)<!-- -->
