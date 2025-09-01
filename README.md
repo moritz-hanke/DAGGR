@@ -99,6 +99,9 @@ shiny::runApp()
   Color (e.g., `"lightblue"`, `"#FF9999"`). Uses any valid CSS color.
 - **Add the Node**: Click `"Add/Update Node"`. The node will appear in
   the network visualization panel.
+- **Change Position**: You can position the node by dragging them in the
+  plot. When you save your DAG (see below) this position will be saved
+  too.
 
 ### 2. Edit existing nodes
 

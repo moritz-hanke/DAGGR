@@ -79,6 +79,7 @@ shiny::runApp()
 * **Set an Intercept**: You can add a fixed intercept term to the node's equation (optional).
 * **Customize Appearance**: Choose a Shape (`circle` or `box`) and a Color (e.g., `"lightblue"`, `"#FF9999"`). Uses any valid CSS color.
 * **Add the Node**: Click `"Add/Update Node"`. The node will appear in the network visualization panel.
+* **Change Position**: You can position the node by dragging them in the plot. When you save your DAG (see below) this position will be saved too.
 
 ### 2. Edit existing nodes
 * Simply follow the steps to create a node; if the node already exists it will be updated by the new values
