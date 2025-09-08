@@ -275,6 +275,7 @@ ui <- fluidPage(
                                     selected = "circle")),
                  column(width = 7,textInput("node_color", "Color", value = "", placeholder = "lightgray (default)"))),
                actionButton("add_node", "Add/Update Node", class = "btn-primary-custom", icon = icon("plus")),
+               actionButton("rename_node", "Rename Node", class = "btn-primary-custom", icon = icon("signature")),
                actionButton("delete_node_btn", "Delete Node", class = "btn-warning-custom", icon = icon("trash")),
                actionButton("clear_nodes", "Clear All Nodes", class = "btn-danger-custom", icon = icon("broom"))
            )
@@ -376,6 +377,38 @@ server <- function(input, output, session) {
       )
     }
   })
+  
+  # Helper function to get node name from ID
+  get_node_name <- function(node_id) {
+    rv$nodes$label[rv$nodes$id == node_id]
+  }
+  
+  # Function to ensure all automated edge names are consistent with current node names
+  cleanup_automated_edge_names <- function() {
+    if (nrow(rv$edges) > 0) {
+      for (i in 1:nrow(rv$edges)) {
+        # Check if this edge has an automated name pattern
+        if (grepl("^coef\\.", rv$edges$label[i])) {
+          # Extract the from and to node names from the automated label
+          label_parts <- unlist(strsplit(rv$edges$label[i], "\\."))
+          if (length(label_parts) >= 3) {
+            from_node_in_label <- label_parts[2]
+            to_node_in_label <- label_parts[3]
+            
+            # Get the actual from and to node names from the edge data
+            actual_from_name <- get_node_name(rv$edges$from[i])
+            actual_to_name <- get_node_name(rv$edges$to[i])
+            
+            # If the label doesn't match the actual node names, update it
+            if (from_node_in_label != actual_from_name || to_node_in_label != actual_to_name) {
+              rv$edges$label[i] <- paste0("coef.", actual_from_name, ".", actual_to_name)
+              rv$edges$value[i] <- rv$edges$label[i]  # Keep value and label consistent
+            }
+          }
+        }
+      }
+    }
+  }
   
   # Capture node positions when network is rendered or updated
   observe({
@@ -736,6 +769,175 @@ server <- function(input, output, session) {
     updateTextInput(session, "node_intercept", value = "")
     updateTextInput(session, "node_size", value = "")
     updateTextInput(session, "node_color", value = "")
+  })
+  
+  # Rename an existing node
+  observeEvent(input$rename_node, {
+    if (input$node_name == "") {
+      showNotification("Please enter the current node name", type = "warning")
+      return()
+    }
+    
+    # Check if node exists
+    node_exists <- input$node_name %in% rv$nodes$label
+    
+    if (!node_exists) {
+      showNotification(paste("Node", input$node_name, "not found"), type = "error")
+      return()
+    }
+    
+    # Prompt for new name
+    showModal(modalDialog(
+      title = "Rename Node",
+      textInput("new_node_name", "New Node Name", value = input$node_name),
+      footer = tagList(
+        modalButton("Cancel"),
+        actionButton("confirm_rename", "Rename", class = "btn-primary")
+      )
+    ))
+  })
+  
+  # Handle the actual renaming
+  observeEvent(input$confirm_rename, {
+    req(input$new_node_name)
+    
+    if (input$new_node_name == "") {
+      showNotification("New node name cannot be empty", type = "warning")
+      removeModal()
+      return()
+    }
+    
+    # Check if new name already exists (excluding the current node)
+    other_nodes <- rv$nodes$label[rv$nodes$label != input$node_name]
+    if (input$new_node_name %in% other_nodes) {
+      showNotification("Node name already exists", type = "error")
+      return()
+    }
+    
+    # Store old name for expression updates
+    old_name <- input$node_name
+    
+    # Update the node label
+    rv$nodes$label[rv$nodes$label == input$node_name] <- input$new_node_name
+    
+    # Update expressions and edge labels that reference this node
+    update_expressions_on_rename(old_name, input$new_node_name)
+    
+    # Ensure all automated edge names are consistent
+    cleanup_automated_edge_names()
+    
+    # Update the node name input field
+    updateTextInput(session, "node_name", value = input$new_node_name)
+    
+    showNotification(paste("Node renamed to", input$new_node_name), type = "message")
+    removeModal()
+  })
+  
+  # Function to update expressions when node is renamed
+  # Function to update expressions and automated edge names when node is renamed
+  update_expressions_on_rename <- function(old_name, new_name) {
+    # Update node expressions
+    if (nrow(rv$nodes) > 0) {
+      # Update intercept field if it contains the old name
+      for (i in 1:nrow(rv$nodes)) {
+        if (grepl(old_name, rv$nodes$intercept[i])) {
+          rv$nodes$intercept[i] <- gsub(old_name, new_name, rv$nodes$intercept[i])
+        }
+      }
+    }
+    
+    # Update edge labels if they contain the old name (for manually entered values)
+    if (nrow(rv$edges) > 0) {
+      for (i in 1:nrow(rv$edges)) {
+        if (grepl(old_name, rv$edges$label[i])) {
+          rv$edges$label[i] <- gsub(old_name, new_name, rv$edges$label[i])
+        }
+        if (grepl(old_name, rv$edges$value[i])) {
+          rv$edges$value[i] <- gsub(old_name, new_name, rv$edges$value[i])
+        }
+      }
+    }
+    
+    # Special handling for automated edge names (coef.from.to format)
+    if (nrow(rv$edges) > 0) {
+      for (i in 1:nrow(rv$edges)) {
+        # Check if this edge has an automated name pattern
+        if (grepl("^coef\\.", rv$edges$label[i])) {
+          # Extract the from and to node names from the automated label
+          label_parts <- unlist(strsplit(rv$edges$label[i], "\\."))
+          if (length(label_parts) >= 3) {
+            from_node_in_label <- label_parts[2]
+            to_node_in_label <- label_parts[3]
+            
+            # If the old name matches either the from or to node in the label, update it
+            if (from_node_in_label == old_name || to_node_in_label == old_name) {
+              new_from <- ifelse(from_node_in_label == old_name, new_name, from_node_in_label)
+              new_to <- ifelse(to_node_in_label == old_name, new_name, to_node_in_label)
+              
+              # Update the edge label to the new automated format
+              rv$edges$label[i] <- paste0("coef.", new_from, ".", new_to)
+              rv$edges$value[i] <- rv$edges$label[i]  # Keep value and label consistent
+            }
+          }
+        }
+      }
+    }
+    
+    # Also update any edges that might reference the node in their automated values
+    if (nrow(rv$edges) > 0) {
+      for (i in 1:nrow(rv$edges)) {
+        # Check if this edge has the old name in its automated value
+        if (grepl(paste0("coef\\.", old_name, "\\."), rv$edges$value[i]) || 
+            grepl(paste0("coef\\..*\\.", old_name), rv$edges$value[i])) {
+          # Replace the old name with new name in the automated value
+          rv$edges$value[i] <- gsub(
+            paste0("coef\\.", old_name, "\\."), 
+            paste0("coef.", new_name, "."), 
+            rv$edges$value[i]
+          )
+          rv$edges$value[i] <- gsub(
+            paste0("coef\\..*\\.", old_name), 
+            paste0("coef.", gsub(paste0("coef\\.(.*)\\.", old_name), "\\1", rv$edges$value[i]), ".", new_name), 
+            rv$edges$value[i]
+          )
+          
+          # Also update the label to match
+          rv$edges$label[i] <- rv$edges$value[i]
+        }
+      }
+    }
+  }
+  
+  observeEvent(input$confirm_rename, {
+    req(input$new_node_name)
+    
+    if (input$new_node_name == "") {
+      showNotification("New node name cannot be empty", type = "warning")
+      removeModal()
+      return()
+    }
+    
+    # Check if new name already exists (excluding the current node)
+    other_nodes <- rv$nodes$label[rv$nodes$label != input$node_name]
+    if (input$new_node_name %in% other_nodes) {
+      showNotification("Node name already exists", type = "error")
+      return()
+    }
+    
+    # Store old name for expression updates
+    old_name <- input$node_name
+    
+    # Update the node label
+    rv$nodes$label[rv$nodes$label == input$node_name] <- input$new_node_name
+    
+    # Update expressions and edge labels that reference this node
+    update_expressions_on_rename(old_name, input$new_node_name)
+    
+    # Update the node name input field
+    updateTextInput(session, "node_name", value = input$new_node_name)
+    
+    showNotification(paste("Node renamed to", input$new_node_name), type = "message")
+    removeModal()
   })
   
   # Handle node dragging - update positions in real-time

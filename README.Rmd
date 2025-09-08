@@ -63,7 +63,7 @@ shiny::runApp()
   * further distributions will be implemented
 * **Automatic R Code Generation**: The app automatically writes the R code for the stochastic expressions  based on your visual graph for further data-generating process.
 * **Cycle Prevention**: Built-in checks prevent the creation of cyclic graphs, ensuring they remain "Acyclic".
-* **Customizable**: Control node colors, shapes, edge styles (solid/dashed), and coefficients.
+* **Customizable**: Control node colors, shapes, edge styles (solid/dashed), and coefficients. Rename nodes if necessary.
 * **Import & Export**: Save your network and and stoachstic espressions as an .rds file to share or load it later for further editing.
 
 
@@ -82,7 +82,8 @@ shiny::runApp()
 * **Change Position**: You can position the node by dragging them in the plot. When you save your DAG (see below) this position will be saved too.
 
 ### 2. Edit existing nodes
-* Simply follow the steps to create a node; if the node already exists it will be updated by the new values
+* Simply follow the steps to create a node; if the node already exists it will be updated by the new values.
+* You can **rename a node** by typing its original name in the `Node Name` field and clicking on `Rename Node` button.
 
 ### 3. Defining Edges (Dependencies)
 

@@ -77,7 +77,7 @@ shiny::runApp()
 - **Cycle Prevention**: Built-in checks prevent the creation of cyclic
   graphs, ensuring they remain “Acyclic”.
 - **Customizable**: Control node colors, shapes, edge styles
-  (solid/dashed), and coefficients.
+  (solid/dashed), and coefficients. Rename nodes if necessary.
 - **Import & Export**: Save your network and and stoachstic espressions
   as an .rds file to share or load it later for further editing.
 
@@ -106,7 +106,9 @@ shiny::runApp()
 ### 2. Edit existing nodes
 
 - Simply follow the steps to create a node; if the node already exists
-  it will be updated by the new values
+  it will be updated by the new values.
+- You can **rename a node** by typing its original name in the
+  `Node Name` field and clicking on `Rename Node` button.
 
 ### 3. Defining Edges (Dependencies)
 
